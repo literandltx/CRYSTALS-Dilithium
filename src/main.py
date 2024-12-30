@@ -4,6 +4,10 @@ from sympy import div
 from sympy import symbols, GF, div, Poly
 import random
 
+# todo set ALPHA and Q
+ALPHA = 0
+Q = 0
+
 X = symbols('X')
 
 def random_polynomial_Zq(n: int, q: int, eta=None):
@@ -50,6 +54,27 @@ def matrix_sum(A :list[list], B :list[list], modulus):
             C[i][j] = div(A[i][j] + B[i][j], modulus)[1]
     
     return C
+
+
+def decompose(a):
+    # Centralized remainder mod ALPHA
+    t = a & 0x7FFFF
+    t += (a >> 19) << 9
+    t -= ALPHA // 2 + 1
+    t += (t >> 31) & ALPHA
+    t -= ALPHA // 2 - 1
+    a -= t
+
+    # Divide by ALPHA (possible to avoid)
+    u = a - 1
+    u >>= 31
+    a = (a >> 19) + 1
+    a -= u & 1
+
+    # Border case
+    a0 = Q + t - (a >> 4)
+    a &= 0xF
+    return a, a0
 
 
 def Gen(k: int, l: int, n: int, q: int, eta: int):
