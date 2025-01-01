@@ -265,8 +265,8 @@ def main():
     print("")
 
     print("Sanity check...")
-    print("Check Verify(pk, M1, sigma2):", not Verify(pk=pk, M=M1, sigma=sigma2))
-    print("Check Verify(pk, M2, sigma1):", not Verify(pk=pk, M=M2, sigma=sigma1))
+    print("Check Verify(pk, M1, sigma2):", Verify(pk=pk, M=M1, sigma=sigma2))
+    print("Check Verify(pk, M2, sigma1):", Verify(pk=pk, M=M2, sigma=sigma1))
 
 
 if __name__ == "__main__":
