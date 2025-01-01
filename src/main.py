@@ -215,7 +215,7 @@ def Sign(sk, M):
         ch2 = Norm_matr_check(temp_value, b=(GAMMA2 - BETA))
         if ch1 or ch2:          
             z = None
-            print("...next iteration...")
+            # print("...next iteration...")
 
     return (z, c)
 
