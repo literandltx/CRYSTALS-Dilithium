@@ -25,11 +25,7 @@ SHAKE128_LENGTH = (256 // 4)
 # SHAKE128_LENGTH = 4
 
 def SHAKE128(s: str) -> list[int]:
-    # return int(hashlib.shake_128(s.encode('utf-8')).hexdigest(SHAKE128_LENGTH), base=16)
     number = int(hashlib.shake_128(s.encode('utf-8')).hexdigest(SHAKE128_LENGTH), base=16)
-
-    # if number.bit_length != 256:
-        # raise ValueError("wrong size")
     
     c = [0 for i in range(256)]
 
@@ -38,7 +34,6 @@ def SHAKE128(s: str) -> list[int]:
         number = number >> 1
     
     return Poly(c, x, domain=Fq)
-
 
 def random_polynomial_Zq(use_eta: bool=False):
     # Create the polynomial with random coefficients in Z_q
@@ -107,26 +102,6 @@ def matrix_sub(A :list[list], B :list[list]):
     
     return C
 
-# def decompose(a):
-#     # Centralized remainder mod ALPHA
-#     t = a & 0x7FFFF
-#     t += (a >> 19) << 9
-#     t -= ALPHA // 2 + 1
-#     t += (t >> 31) & ALPHA
-#     t -= ALPHA // 2 - 1
-#     a -= t
-
-#     # Divide by ALPHA (possible to avoid)
-#     u = a - 1
-#     u >>= 31
-#     a = (a >> 19) + 1
-#     a -= u & 1
-
-#     # Border case
-#     a0 = Q + t - (a >> 4)
-#     a &= 0xF
-#     return a, a0
-
 def decompose(a):
     r = a % Q
     r0 = modpm(r, modulus=ALPHA)
@@ -137,7 +112,6 @@ def decompose(a):
         r1 = (r - r0) // ALPHA
 
     return (r1, r0)
-
 
 def Gen():
     A = [[random_polynomial_Zq() for j in range(L)] for i in range(K)]
@@ -215,7 +189,6 @@ def Sign(sk, M):
         ch2 = Norm_matr_check(temp_value, b=(GAMMA2 - BETA))
         if ch1 or ch2:          
             z = None
-            # print("...next iteration...")
 
     return (z, c)
 
@@ -227,7 +200,6 @@ def Verify(pk, M, sigma):
     w1 = [[HighBits(coef) for coef in poly[0].all_coeffs()] for poly in temp_value]
 
     return Norm_polyvec(z) < (GAMMA1 - BETA) and c == SHAKE128(M + str(w1))
-
 
 def example(): # polinomial multipication modulo MODULUS (which is polinom)
     polynomial1 = random_polynomial_Zq()
@@ -249,7 +221,6 @@ def main():
     print("Key is generated")
     print("")
 
-
     M1 = "aaaaaaaaaaaaa"
     M2 = "aaaaaaaaaaaaaaa"
     print("Sign first message...")
@@ -267,7 +238,6 @@ def main():
     print("Sanity check...")
     print("Check Verify(pk, M1, sigma2):", Verify(pk=pk, M=M1, sigma=sigma2))
     print("Check Verify(pk, M2, sigma1):", Verify(pk=pk, M=M2, sigma=sigma1))
-
 
 if __name__ == "__main__":
     main()
