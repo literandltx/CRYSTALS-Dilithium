@@ -4,28 +4,39 @@ from sympy import div
 from sympy import symbols, GF, div, Poly
 import random
 
-# todo set ALPHA and Q
-ALPHA = 0
-Q = 0
+N = 256
+Q = 2**23 - 2**13 + 1 
+GAMMA1 = (Q - 1) // 16
+GAMMA2 = GAMMA1 // 2
+BETA = 375
+ALPHA = 2 * GAMMA2
 
-X = symbols('X')
+K = 3
+L = 2
+ETA = 7
+SETABITS = 4
+BETA = 375
+OMEGA = 64
 
-def random_polynomial_Zq(n: int, q: int, eta=None):
-    Fq = GF(q)
-    
+# x = symbols('X')
+Fq = GF(Q)
+
+MODULUS = x**N + 1
+
+def random_polynomial_Zq(use_eta: bool=False):
     # Create the polynomial with random coefficients in Z_q
     coefficients = None
-    if eta is None:
-        coefficients = [random.randint(0, q-1) for _ in range(n)]
-    else: # if coeficients should be small
-        coefficients = [random.randint(0, eta) for _ in range(n)]
+    if use_eta: # if coeficients should be small
+        coefficients = [random.randint(0, ETA) for _ in range(N)]
+    else:
+        coefficients = [random.randint(0, Q-1) for _ in range(N)]
 
     # Generate the polynomial
-    polynomial = sum(c * X**i for i, c in enumerate(coefficients))
+    polynomial = sum(c * x**i for i, c in enumerate(coefficients))
     
-    return Poly(polynomial, X, domain=Fq)
+    return Poly(polynomial, x, domain=Fq)
 
-def matrix_mul(A :list[list], B :list[list], modulus):
+def matrix_mul(A :list[list], B :list[list]):
     n = len(A)
     m = len(A[0])
     if len(B) != m:
@@ -37,12 +48,12 @@ def matrix_mul(A :list[list], B :list[list], modulus):
         for j in range(p):
             sum = 0
             for k in range(m):
-                sum = div(sum + div(A[i][k] * B[k][j], modulus)[1], modulus)[1]
+                sum = div(sum + div(A[i][k] * B[k][j], MODULUS)[1], MODULUS)[1]
             C[i][j] = sum
     
     return C
 
-def matrix_sum(A :list[list], B :list[list], modulus):
+def matrix_sum(A :list[list], B :list[list]):
     n = len(A)
     m = len(A[0])
     if len(B) != n or len(B[0]) != m:
@@ -51,7 +62,7 @@ def matrix_sum(A :list[list], B :list[list], modulus):
     C = [[None for j in range(m)] for i in range(n)]
     for i in range(n):
         for j in range(m):
-            C[i][j] = div(A[i][j] + B[i][j], modulus)[1]
+            C[i][j] = div(A[i][j] + B[i][j], MODULUS)[1]
     
     return C
 
@@ -77,15 +88,13 @@ def decompose(a):
     return a, a0
 
 
-def Gen(k: int, l: int, n: int, q: int, eta: int):
-    modulus = X**n + 1
+def Gen():
+    A = [[random_polynomial_Zq() for j in range(L)] for i in range(K)]
 
-    A = [[random_polynomial_Zq(n=n, q=q) for j in range(l)] for i in range(k)]
+    s1 = [[random_polynomial_Zq(use_eta=True)] for j in range(L)]
+    s2 = [[random_polynomial_Zq(use_eta=True)] for j in range(K)]
 
-    s1 = [[random_polynomial_Zq(n=n, q=q, eta=eta)] for j in range(l)]
-    s2 = [[random_polynomial_Zq(n=n, q=q, eta=eta)] for j in range(k)]
-
-    t = matrix_sum(matrix_mul(A, s1, modulus=modulus), s2, modulus=modulus)
+    t = matrix_sum(matrix_mul(A, s1), s2)
 
     return ((A, t), (A, t, s1, s2))
 
@@ -96,39 +105,25 @@ def Verify():
     pass
 
 def example():
-    n = 256
-
-    # Define the finite field Z_q
-    q = 2**23 - 2**13 + 1
-    Fq = GF(q)
-
-    modulus = X**n + 1
-
-    polynomial1 = random_polynomial_Zq(n=n, q=q)
-    polynomial2 = random_polynomial_Zq(n=n, q=q)
+    polynomial1 = random_polynomial_Zq()
+    polynomial2 = random_polynomial_Zq()
 
     print(f"polynomial1: {polynomial1}")
     print(f"polynomial2: {polynomial2}")
 
     
-    result_add = div(polynomial1 + polynomial2, modulus)[1] # Take remainder after division
-    print(f"Addition result modulo {modulus}: {result_add}")
+    result_add = div(polynomial1 + polynomial2, MODULUS)[1] # Take remainder after division
+    print(f"Addition result modulo {MODULUS}: {result_add}")
 
-    result_mul = div(polynomial1 * polynomial2, modulus)[1] # Take remainder after division
-    print(f"Multiplication result modulo {modulus}: {result_mul}")
+    result_mul = div(polynomial1 * polynomial2, MODULUS)[1] # Take remainder after division
+    print(f"Multiplication result modulo {MODULUS}: {result_mul}")
 
 def main():
-    n = 256
-    q = 2**23 - 2**13 + 1 
-
-    k=4
-    l=4
-    eta = 5
-
-    pk, sk = Gen(k=k, l=l, n=n, q=q, eta=eta)
+    pk, sk = Gen()
     print(pk)
     print("------------------------------------------")
     print(sk)
 
 if __name__ == "__main__":
     main()
+    # example()
